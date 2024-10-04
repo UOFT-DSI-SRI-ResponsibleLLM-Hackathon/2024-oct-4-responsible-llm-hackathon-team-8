@@ -4,11 +4,14 @@ app = Flask(__name__)
 
 # Store chat history
 chat_history = []
+database_link = ""  # Variable to store the database link
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global database_link
+
     if request.method == 'POST':
-        user_input = request.form['user_input']
+        user_input = request.form.get('user_input')
         # Here, you would add logic to generate the SQL query and fetch data
         sql_query = "SELECT * FROM example_table WHERE condition"  # Placeholder for generated SQL
         data = [
@@ -21,7 +24,16 @@ def index():
 
         return redirect(url_for('index'))
 
-    return render_template('index.html', chat_history=chat_history)
+    return render_template('index.html', chat_history=chat_history, database_link=database_link)
 
+@app.route('/set_db_link', methods=['POST'])
+def set_db_link():
+    global database_link
+    # database_link = request.form.get('db_link')
+    return redirect(url_for('index'))
+
+
+# python -m waitress --host=0.0.0.0 --port=5000 app:app
 if __name__ == '__main__':
-    app.run(debug=True)
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=5000)
