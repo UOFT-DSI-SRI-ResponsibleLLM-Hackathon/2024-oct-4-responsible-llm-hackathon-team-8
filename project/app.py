@@ -44,13 +44,13 @@ def set_db_link():
             print("Connected to the database successfully!")
 
             database_link = db_link  # Set the database link if connection is successful
-            return header_processing(jsonify({"status": "Connected", "data": "Connected to Database Successfully!"}))
+            return header_processing(jsonify({"status": "Connected", "message": "Connected to Database Successfully!"}))
 
         except Exception as e:
             print(f"Connection failed: {str(e)}")
-            return header_processing(jsonify({"status": "Invalid", "data": "Database invalid or Connection Error..."}))
+            return header_processing(jsonify({"status": "Invalid", "message": "Database invalid or Connection Error..."}))
 
-    return header_processing(jsonify({"status": "Invalid", "data": "No database link provided."}))
+    return header_processing(jsonify({"status": "Invalid", "message": "No database link provided."}))
 
 
 @app.route("/api/query", methods=["POST"])
@@ -88,12 +88,31 @@ def query_database():
         chat_history.append(
             {
                 "user_input": user_input,
-                "data": "Please connect to a valid database first!!!",
+                "message": "Please connect to a valid database first!!!",
                 "type": "message",
             }
         )
-        return header_processing(jsonify({"data": "Please connect to a valid database first!"}))
+        return header_processing(jsonify({"message": "Please connect to a valid database first!"}))
 
+@app.route("/api/sqlexec", methods=["POST"])
+def sql_execute():
+    """Handle user input and execute a SQL query."""
+    global database_link, conn
+
+    sql_query = request.json.get("sql_query_input")
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute(sql_query)
+
+        # zip rows and features
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+
+        result = [dict(zip(columns, row)) for row in data]
+
+        return header_processing(jsonify({"data": result}))
+    else:  # Error handling
+        return header_processing(jsonify({"message": "Please connect to a valid database first!"}))
 
 """
 python -m waitress --host=0.0.0.0 --port=5000 app:app

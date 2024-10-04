@@ -14,10 +14,10 @@ async function setDbLink(event) {
     });
 
     const result = await response.json();
-    if (response.ok) {
+    if (response.status === 'Connected') {
         alert(result.data);
     } else {
-        alert(result.error);
+        alert(result.message);
     }
 }
 
@@ -46,7 +46,7 @@ async function queryDatabase(event) {
     } else {
         chatHistory.push({
             user_input: userInput,
-            data: result.data,
+            data: result.message,
             type: 'message'
         });
         displayChatHistory();
@@ -69,7 +69,7 @@ function displayChatHistory() {
             messageDiv.innerText = `You: ${entry.user_input}\nSQL Query: ${entry.sql_query}\nData: ${JSON.stringify(entry.data, null, 2)}`; 
         } else if (entry.type === 'message') {
             messageDiv.className = 'bg-warning p-2 my-1'; // Styling for system message
-            messageDiv.innerText = `You: ${entry.user_input}\nSystem: ${entry.data}`;
+            messageDiv.innerText = `You: ${entry.user_input}\nSystem: ${entry.message}`;
         }
 
         chatBox.appendChild(messageDiv);
