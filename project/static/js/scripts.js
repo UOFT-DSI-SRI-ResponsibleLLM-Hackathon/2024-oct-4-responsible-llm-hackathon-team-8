@@ -1,33 +1,71 @@
-const chatBox = document.getElementById('chat-box');
+const chatHistory = [];
 
-function renderChat() {
-    chatBox.innerHTML = ''; // Clear previous content
-    chatHistory.forEach(entry => {
-        const userMessage = document.createElement('div');
-        userMessage.classList.add('user-message');
-        userMessage.innerHTML = `<strong>You:</strong> ${entry.user_input}`;
-        chatBox.appendChild(userMessage);
+// Function to set the database link
+async function setDbLink(event) {
+    event.preventDefault(); // Prevent form submission
+    const dbLink = document.getElementById('db-link').value;
 
-        if (entry.type === 'query') {
-            const sqlMessage = document.createElement('div');
-            sqlMessage.classList.add('bot-message');
-            sqlMessage.innerHTML = `<strong>Generated SQL Query:</strong><br><code>${entry.sql_query}</code>`;
-            chatBox.appendChild(sqlMessage);
-
-            if (entry.data) {
-                const dataMessage = document.createElement('div');
-                dataMessage.classList.add('bot-message');
-                dataMessage.innerHTML = `${entry.data.map(row => `<li>${row.Product} - $${row.Price} (${row.Year})</li>`).join('')}`;
-                chatBox.appendChild(dataMessage);
-            }
-        } else if (entry.type === 'message') {
-            const errorMessage = document.createElement('div');
-            errorMessage.classList.add('bot-message', 'text-danger');
-            errorMessage.innerHTML = `${entry.data}`;
-            chatBox.appendChild(errorMessage);
-        }
+    const response = await fetch('http://localhost:5000/api/set_db_link', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ db_link: dbLink })
     });
+
+    const result = await response.json();
+    if (response.ok) {
+        alert(result.message);
+    } else {
+        alert(result.error);
+    }
 }
 
-// Call renderChat to display chat history when the page loads
-renderChat();
+// Function to query the database
+async function queryDatabase(event) {
+    event.preventDefault(); // Prevent form submission
+    const userInput = document.getElementById('user-input').value;
+
+    const response = await fetch('http://localhost:5000/api/query', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_input: userInput })
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+        chatHistory.push({
+            user_input: userInput,
+            sql_query: result.sql_query,
+            data: result.data,
+            type: 'query'
+        });
+        displayChatHistory();
+    } else {
+        chatHistory.push({
+            user_input: userInput,
+            data: result.error,
+            type: 'message'
+        });
+        displayChatHistory();
+    }
+
+    document.getElementById('user-input').value = ''; // Clear input
+}
+
+// Function to display chat history
+function displayChatHistory() {
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML = ''; // Clear chat box
+    chatHistory.forEach(entry => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = entry.type === 'query' ? 'bg-light p-2 my-1' : 'bg-warning p-2 my-1';
+        messageDiv.innerText = entry.type === 'query' 
+            ? `You: ${entry.user_input}\nSQL Query: ${entry.sql_query}\nData: ${JSON.stringify(entry.data)}` 
+            : `System: ${entry.data}`;
+        chatBox.appendChild(messageDiv);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+}
