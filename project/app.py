@@ -7,7 +7,7 @@ CORS(app)
 
 chat_history = []
 database_link = ""
-
+conn = None
 
 def header_processing(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -25,10 +25,16 @@ def get_chat_history():
 @app.route("/api/set_db_link", methods=["POST"])
 def set_db_link():
     """Set the database connection link."""
-    global database_link
+    global database_link, conn
     db_link = request.json.get("db_link")
 
     if db_link:
+        # reset connection and database
+        if conn:
+            conn.close()
+        conn = None
+        database_link = ""
+
         app.config["SQLALCHEMY_DATABASE_URI"] = db_link
         print(f"Database link set to: {db_link}")
 
@@ -37,18 +43,12 @@ def set_db_link():
             conn = psycopg2.connect(db_link)
             print("Connected to the database successfully!")
 
-            # Close the connection after testing
-            conn.close()
-            print("Disconnected from the database.")
-
             database_link = db_link  # Set the database link if connection is successful
-            return header_processing(jsonify({"status": "Connected", "data": "Database link set and connected successfully!"}))
+            return header_processing(jsonify({"status": "Connected", "data": "Connected to Database Successfully!"}))
 
         except Exception as e:
             print(f"Connection failed: {str(e)}")
-            print("Database invalid or Connection Error...")
-            database_link = ""  # Reset database link if invalid
-            return header_processing(jsonify({"status": "Invalid", "data": "Invalid database or cannot be connected."}))
+            return header_processing(jsonify({"status": "Invalid", "data": "Database invalid or Connection Error..."}))
 
     return header_processing(jsonify({"status": "Invalid", "data": "No database link provided."}))
 
@@ -56,26 +56,34 @@ def set_db_link():
 @app.route("/api/query", methods=["POST"])
 def query_database():
     """Handle user input and generate a SQL query."""
-    global database_link
+    global database_link, conn
 
     user_input = request.json.get("user_input")
-    if database_link:
-        sql_query = "SELECT * FROM example_table WHERE condition"  # Placeholder for generated SQL
-        data = [
-            {"Product": "Example Product 1", "Price": 10, "Year": 2022},
-            {"Product": "Example Product 2", "Price": 15, "Year": 2023},
-        ]
+    if conn:
+        sql_query = """
+            SELECT team_name, rank, match_numbers
+            FROM teams_data
+            ORDER BY rank ASC
+            LIMIT 3;
+        """
+        cursor = conn.cursor()
+        cursor.execute(sql_query)
 
-        # Append user input and bot response to chat history
+        # zip rows and features
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+
+        result = [dict(zip(columns, row)) for row in data]
+
         chat_history.append(
             {
                 "user_input": user_input,
                 "sql_query": sql_query,
-                "data": data,
+                "data": result,
                 "type": "query",
             }
         )
-        return header_processing(jsonify({"user_input": user_input, "sql_query": sql_query, "data": data}))
+        return header_processing(jsonify({"user_input": user_input, "sql_query": sql_query, "data": result}))
     else:  # Error handling
         chat_history.append(
             {
