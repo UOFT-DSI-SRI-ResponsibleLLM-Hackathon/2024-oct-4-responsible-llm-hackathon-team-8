@@ -1,30 +1,27 @@
-from flask import Flask, render_template, request
-import waitress
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-# Home route serving index.html
-@app.route('/')
+# Store chat history
+chat_history = []
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    if request.method == 'POST':
+        user_input = request.form['user_input']
+        # Here, you would add logic to generate the SQL query and fetch data
+        sql_query = "SELECT * FROM example_table WHERE condition"  # Placeholder for generated SQL
+        data = [
+            {"Product": "Example Product 1", "Price": 10, "Year": 2022},
+            {"Product": "Example Product 2", "Price": 15, "Year": 2023}
+        ]  # Placeholder for fetched data
+        
+        # Append user input and bot response to chat history
+        chat_history.append({'user_input': user_input, 'sql_query': sql_query, 'data': data})
 
-# Route to handle user input and display results
-@app.route('/query', methods=['POST'])
-def query():
-    user_input = request.form['user_input']
-    
-    # Mock SQL query generation (replace this with actual text-to-SQL logic)
-    sql_query = f"SELECT * FROM products WHERE year = 2023;"
-    
-    # Mock data to display (replace this with actual data from SQL execution)
-    data = [
-        {"Product": "Laptop", "Price": 1000, "Year": 2023},
-        {"Product": "Smartphone", "Price": 700, "Year": 2023},
-        {"Product": "Tablet", "Price": 500, "Year": 2023}
-    ]
-    
-    return render_template('index.html', sql_query=sql_query, data=data)
+        return redirect(url_for('index'))
 
-# python -m waitress --host=0.0.0.0 --port=5000 app:app
-if __name__ == "__main__":
-    waitress.serve(app, host="0.0.0.0", port=5000)
+    return render_template('index.html', chat_history=chat_history)
+
+if __name__ == '__main__':
+    app.run(debug=True)
