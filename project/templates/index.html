@@ -20,24 +20,7 @@
         </form>
 
         <div class="chat-container d-flex flex-column" id="chat-box">
-            <!-- Display chat history -->
-            {% for entry in chat_history %}
-                <div class="user-message">{{ entry.user_input }}</div>
-                <div class="bot-message">
-                    <strong>Generated SQL Query:</strong><br>
-                    <code>{{ entry.sql_query }}</code>
-                </div>
-                {% if entry.data %}
-                    <div class="bot-message">
-                        <strong>Data:</strong>
-                        <ul>
-                            {% for row in entry.data %}
-                                <li>{{ row.Product }} - ${{ row.Price }} ({{ row.Year }})</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-            {% endfor %}
+           <!-- JS Render Here -->
         </div>
 
         <!-- Search bar -->
@@ -46,6 +29,7 @@
             <button type="submit" class="btn btn-primary">Send</button>
         </form>
     </div>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script> <!-- Link to external JS -->
+    <script> const chatHistory = {{ chat_history | tojson | safe }}; </script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>

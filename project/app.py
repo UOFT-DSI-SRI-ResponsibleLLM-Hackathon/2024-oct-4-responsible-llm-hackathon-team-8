@@ -3,28 +3,31 @@ import psycopg2
 
 app = Flask(__name__)
 
-# Store chat history
 chat_history = []
-database_link = ""  # Variable to store the database link
+database_link = ""
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global database_link
 
+    # if any submission on index page
     if request.method == 'POST':
         user_input = request.form.get('user_input')
-        # Here, you would add logic to generate the SQL query and fetch data
-        sql_query = "SELECT * FROM example_table WHERE condition"  # Placeholder for generated SQL
-        data = [
-            {"Product": "Example Product 1", "Price": 10, "Year": 2022},
-            {"Product": "Example Product 2", "Price": 15, "Year": 2023}
-        ]  # Placeholder for fetched data
+        if database_link:
+            sql_query = "SELECT * FROM example_table WHERE condition"  # Placeholder for generated SQL
+            data = [
+                {"Product": "Example Product 1", "Price": 10, "Year": 2022},
+                {"Product": "Example Product 2", "Price": 15, "Year": 2023}
+            ] 
+            
+            # Append user input and bot response to chat history
+            chat_history.append({'user_input': user_input, 'sql_query': sql_query, 'data': data, 'type': 'query'})
         
-        # Append user input and bot response to chat history
-        chat_history.append({'user_input': user_input, 'sql_query': sql_query, 'data': data})
+        else: # Error handling
+            chat_history.append({'user_input': user_input, 'data': "Please connect to a valid database first!!!", 'type': 'message'})
 
         return redirect(url_for('index'))
-
+      
     return render_template('index.html', chat_history=chat_history, database_link=database_link)
 
 @app.route('/set_db_link', methods=['POST'])
@@ -32,7 +35,7 @@ def set_db_link():
     global database_link
     database_link = request.form.get('db_link')
 
-    # Set the new database link (e.g., for future use in connecting to PostgreSQL)
+    # Set the new database link
     if database_link:
         app.config['SQLALCHEMY_DATABASE_URI'] = database_link
         print(f"Database link set to: {database_link}")
@@ -48,6 +51,8 @@ def set_db_link():
         
         except Exception as e:
             print(f"Connection failed: {str(e)}")
+            print("Database invalid or Connection Error...")
+            database_link = "" # empty database link if invalid
 
     return redirect(url_for('index'))
 
