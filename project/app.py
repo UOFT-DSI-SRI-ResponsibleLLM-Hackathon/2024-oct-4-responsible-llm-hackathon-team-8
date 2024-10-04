@@ -8,6 +8,7 @@ CORS(app)
 chat_history = []
 database_link = ""
 
+
 def header_processing(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -41,15 +42,15 @@ def set_db_link():
             print("Disconnected from the database.")
 
             database_link = db_link  # Set the database link if connection is successful
-            return header_processing(jsonify({"message": "Database link set and connected successfully!"}))
+            return header_processing(jsonify({"status": "Connected", "data": "Database link set and connected successfully!"}))
 
         except Exception as e:
             print(f"Connection failed: {str(e)}")
             print("Database invalid or Connection Error...")
             database_link = ""  # Reset database link if invalid
-            return header_processing(jsonify({"error": "Invalid database link."}))
+            return header_processing(jsonify({"status": "Invalid", "data": "Invalid database or cannot be connected."}))
 
-    return header_processing(jsonify({"error": "No database link provided."}))
+    return header_processing(jsonify({"status": "Invalid", "data": "No database link provided."}))
 
 
 @app.route("/api/query", methods=["POST"])
@@ -74,7 +75,7 @@ def query_database():
                 "type": "query",
             }
         )
-        return jsonify({"user_input": user_input, "sql_query": sql_query, "data": data}), 200
+        return header_processing(jsonify({"user_input": user_input, "sql_query": sql_query, "data": data}))
     else:  # Error handling
         chat_history.append(
             {
@@ -83,7 +84,7 @@ def query_database():
                 "type": "message",
             }
         )
-        return jsonify({"error": "Please connect to a valid database first!"}), 400
+        return header_processing(jsonify({"data": "Please connect to a valid database first!"}))
 
 
 """

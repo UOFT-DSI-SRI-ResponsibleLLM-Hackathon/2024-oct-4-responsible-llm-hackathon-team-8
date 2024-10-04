@@ -15,7 +15,7 @@ async function setDbLink(event) {
 
     const result = await response.json();
     if (response.ok) {
-        alert(result.message);
+        alert(result.data);
     } else {
         alert(result.error);
     }
@@ -35,7 +35,7 @@ async function queryDatabase(event) {
     });
 
     const result = await response.json();
-    if (response.ok) {
+    if (result.sql_query) {
         chatHistory.push({
             user_input: userInput,
             sql_query: result.sql_query,
@@ -46,7 +46,7 @@ async function queryDatabase(event) {
     } else {
         chatHistory.push({
             user_input: userInput,
-            data: result.error,
+            data: result.data,
             type: 'message'
         });
         displayChatHistory();
@@ -59,13 +59,22 @@ async function queryDatabase(event) {
 function displayChatHistory() {
     const chatBox = document.getElementById('chat-box');
     chatBox.innerHTML = ''; // Clear chat box
+
     chatHistory.forEach(entry => {
         const messageDiv = document.createElement('div');
-        messageDiv.className = entry.type === 'query' ? 'bg-light p-2 my-1' : 'bg-warning p-2 my-1';
-        messageDiv.innerText = entry.type === 'query' 
-            ? `You: ${entry.user_input}\nSQL Query: ${entry.sql_query}\nData: ${JSON.stringify(entry.data)}` 
-            : `System: ${entry.data}`;
+        
+        // Define styles based on the message type
+        if (entry.type === 'query') {
+            messageDiv.className = 'bg-light p-2 my-1'; // Styling for query
+            messageDiv.innerText = `You: ${entry.user_input}\nSQL Query: ${entry.sql_query}\nData: ${JSON.stringify(entry.data, null, 2)}`; 
+        } else if (entry.type === 'message') {
+            messageDiv.className = 'bg-warning p-2 my-1'; // Styling for system message
+            messageDiv.innerText = `You: ${entry.user_input}\nSystem: ${entry.data}`;
+        }
+
         chatBox.appendChild(messageDiv);
     });
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+
+    // Scroll to the bottom of the chat box
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
