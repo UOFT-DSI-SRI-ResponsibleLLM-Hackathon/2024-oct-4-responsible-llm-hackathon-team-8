@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+import psycopg2
 
 app = Flask(__name__)
 
@@ -29,11 +30,31 @@ def index():
 @app.route('/set_db_link', methods=['POST'])
 def set_db_link():
     global database_link
-    # database_link = request.form.get('db_link')
+    database_link = request.form.get('db_link')
+
+    # Set the new database link (e.g., for future use in connecting to PostgreSQL)
+    if database_link:
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_link
+        print(f"Database link set to: {database_link}")
+        
+        # Test the connection
+        try:
+            conn = psycopg2.connect(database_link)
+            print("Connected to the database successfully!")
+            
+            # Close the connection after testing
+            conn.close()
+            print("Disconnected from the database.")
+        
+        except Exception as e:
+            print(f"Connection failed: {str(e)}")
+
     return redirect(url_for('index'))
 
 
-# python -m waitress --host=0.0.0.0 --port=5000 app:app
+"""
+python -m waitress --host=0.0.0.0 --port=5000 app:app
+"""
 if __name__ == '__main__':
     from waitress import serve
     serve(app, host='0.0.0.0', port=5000)
