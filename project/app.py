@@ -35,9 +35,6 @@ def check_sql_query(sql_query):
 def get_table_attributes(connection):
     cursor = connection.cursor()
 
-    cursor.execute("SELECT datname FROM pg_database;")
-    databases = cursor.fetchall()
-
     # Execute a query to list all tables in the current database
     cursor.execute("""
         SELECT table_name 
@@ -60,6 +57,7 @@ def get_table_attributes(connection):
 
     return table_name, colnames
 
+
 def langchain_generate_sql(text, features, table_name):
     """Generate a SQL query using Langchain given natural language input and database schema."""
     prompt = f"Considering the context of the data contained within the table named {table_name}, which includes the following columns: {features}. I will ask a question and you should answer based on the table, if I am querying some data you should give me SQL commands, if I am asking general question, you could answer or say you don't have enough information. Here is my question: {text}"
@@ -69,8 +67,25 @@ def langchain_generate_sql(text, features, table_name):
     except Exception as e:
         print(f"Langchain SQL generation failed: {str(e)}")
         return False
-    
 
+
+def langchain_generate_summary(table_name, features):
+    prompt = (
+        f"Please generate a summary for the table named '{table_name}'. "
+        f"This table includes the following features: {', '.join(features)}. "
+        f"Optional to provide insights about the data, key relationships, and any notable trends or patterns. "
+        f"Ensure the summary is short (50 words) and clear, suitable for a reader unfamiliar with the dataset to easily read and understand."
+    )    
+    try:
+        result = llm.invoke(prompt)
+        return result
+    except Exception as e:
+        print(f"Langchain SQL generation failed: {str(e)}")
+        return False
+
+"""
+REST APIs Definition
+"""
 @app.route("/api/chat_history", methods=["GET"])
 def get_chat_history():
     """Retrieve the chat history."""
@@ -96,10 +111,12 @@ def set_db_link():
         # Test the connection
         try:
             conn = psycopg2.connect(db_link)
+            table_name, colnames = get_table_attributes(conn)
+            summary = langchain_generate_summary(table_name, colnames).content
             print("Connected to the database successfully!")
 
             database_link = db_link  # Set the database link if connection is successful
-            return header_processing(jsonify({"status": "Connected", "message": "Connected to Database Successfully!"}))
+            return header_processing(jsonify({"status": "Connected", "data": summary, "message": "Connected to Database Successfully!"}))
 
         except Exception as e:
             print(f"Connection failed: {str(e)}")
@@ -169,6 +186,7 @@ def query_database():
             }
         )
         return header_processing(jsonify({"message": "Please connect to a valid database first!"}))
+
 
 @app.route("/api/sqlexec", methods=["POST"])
 def sql_execute():
