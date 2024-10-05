@@ -2,4 +2,6 @@
 
 Front-end is located: https://github.com/AlezHibali/2024-oct-4-responsible-llm-hackathon/tree/leo-branch
 We did not finish the HTTPS deployment, but we could use HTTP instead. 
+
+Link: https://llm-hack-team8-git-leo-branch-alezhibalis-projects.vercel.app/
 Try this to allow HTTP: https://github.com/vercel/vercel/discussions/5287#discussioncomment-3596055
