@@ -1,6 +1,8 @@
 import psycopg2
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from langchain_openai import ChatOpenAI
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -9,12 +11,65 @@ chat_history = []
 database_link = ""
 conn = None
 
+os.environ['OPENAI_API_KEY'] = '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'
+llm = ChatOpenAI(temperature=0.8, model_name='gpt-4o')
+
+
 def header_processing(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     return response
 
+
+import re
+def check_sql_query(sql_query):    
+    pattern = r"```sql\s*([\s\S]*?)```"
+    match = re.search(pattern, sql_query.content)
+    if match:
+        return match.group(1).strip()  # Return the content inside the triple single quotes
+    else:
+        return False
+    
+
+def get_table_attributes(connection):
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT datname FROM pg_database;")
+    databases = cursor.fetchall()
+
+    # Execute a query to list all tables in the current database
+    cursor.execute("""
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public';
+    """)
+
+    # Fetch the results
+    tables = cursor.fetchall()
+
+    if tables:
+        table_name = tables[0] # HARDCODE TO FETCH THE FIRST TABLE -> FUTURE WORK NEEDED!!!
+        table_name = table_name[0]
+    else:
+        return None, None
+
+    # Fetch the column names
+    cursor.execute(f"SELECT * FROM {table_name};")
+    colnames = [desc[0] for desc in cursor.description]
+
+    return table_name, colnames
+
+def langchain_generate_sql(text, features, table_name):
+    """Generate a SQL query using Langchain given natural language input and database schema."""
+    prompt = f"Given a table named {table_name}, all its columns are: {features}, write a SQL query that fulfills this request: {text}."
+    try:
+        result = llm.invoke(prompt)
+        return result
+    except Exception as e:
+        print(f"Langchain SQL generation failed: {str(e)}")
+        return False
+    
 
 @app.route("/api/chat_history", methods=["GET"])
 def get_chat_history():
@@ -60,15 +115,34 @@ def query_database():
 
     user_input = request.json.get("user_input")
     if conn:
-        # HARD CODED HERE ...
-        sql_query = """
-            SELECT team_name, rank, match_numbers
-            FROM teams_data
-            ORDER BY rank ASC
-            LIMIT 3;
-        """
+        table_name, colnames = get_table_attributes(conn)
+        sql_query = langchain_generate_sql(user_input, colnames, table_name)
+        sql_query = check_sql_query(sql_query)
+
         cursor = conn.cursor()
-        cursor.execute(sql_query)
+        if sql_query:
+            try:
+                cursor.execute(sql_query)
+            except:
+                print("bad query")
+                chat_history.append(
+                    {
+                        "user_input": user_input,
+                        "sql_query": sql_query,
+                        "data": None,
+                        "type": "query", 
+                    }
+                )
+                return header_processing(jsonify({"user_input": user_input, "sql_query": sql_query, "data": None}))
+        else:
+            # HARD CODED HERE ...
+            sql_query = """
+                SELECT team_name, rank, match_numbers
+                FROM teams_data
+                ORDER BY rank ASC
+                LIMIT 3;
+            """
+            cursor.execute(sql_query)
 
         # zip rows and features
         columns = [desc[0] for desc in cursor.description]
@@ -114,6 +188,7 @@ def sql_execute():
         return header_processing(jsonify({"data": result}))
     else:  # Error handling
         return header_processing(jsonify({"message": "Please connect to a valid database first!"}))
+
 
 """
 gunicorn --bind 0.0.0.0:5000 app:app
