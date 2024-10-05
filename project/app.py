@@ -62,7 +62,7 @@ def get_table_attributes(connection):
 
 def langchain_generate_sql(text, features, table_name):
     """Generate a SQL query using Langchain given natural language input and database schema."""
-    prompt = f"Given a table named {table_name}, all its columns are: {features}, write a SQL query that fulfills this request: {text}."
+    prompt = f"Considering the context of the data contained within the table named {table_name}, which includes the following columns: {features}. I will ask a question and you should answer based on the table, if I am querying some data you should give me SQL commands, if I am asking general question, you could answer or say you don't have enough information. Here is my question: {text}"
     try:
         result = llm.invoke(prompt)
         return result
@@ -118,7 +118,7 @@ def query_database():
         table_name, colnames = get_table_attributes(conn)
         sql_query = langchain_generate_sql(user_input, colnames, table_name)
         response = sql_query.content
-        
+
         sql_query = check_sql_query(sql_query)
 
         cursor = conn.cursor()

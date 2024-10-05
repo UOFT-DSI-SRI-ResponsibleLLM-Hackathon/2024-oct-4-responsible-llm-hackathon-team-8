@@ -14,8 +14,8 @@ async function setDbLink(event) {
     });
 
     const result = await response.json();
-    if (response.status === 'Connected') {
-        alert(result.data);
+    if (result.status === 'Connected') {
+        alert(result.message);
     } else {
         alert(result.message);
     }
