@@ -37,4 +37,5 @@ This project uses a **PostgreSQL** database for data management. Below is an exa
 ```
 postgresql://alezhibali
 @league-teams-stat-2023.chck4ckqwqjq.us-east-1.rds.amazonaws.com:5432/postgres
+
 ```
