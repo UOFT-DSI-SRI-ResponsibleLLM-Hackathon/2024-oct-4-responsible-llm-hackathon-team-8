@@ -60,6 +60,7 @@ def query_database():
 
     user_input = request.json.get("user_input")
     if conn:
+        # HARD CODED HERE ...
         sql_query = """
             SELECT team_name, rank, match_numbers
             FROM teams_data
