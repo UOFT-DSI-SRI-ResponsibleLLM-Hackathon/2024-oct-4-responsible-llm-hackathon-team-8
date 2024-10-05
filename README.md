@@ -6,6 +6,11 @@ This project was developed as part of the **2024 Responsible LLM Hackathon**. Th
 
 ---
 
+## Demo
+![Alt text](src/demo1.mp4)
+![Alt text](src/demo2.mp4)
+
+
 ## Live Application
 
 Access the live version of our application here (currently using HTTP deployment):  
