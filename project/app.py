@@ -116,9 +116,8 @@ def sql_execute():
         return header_processing(jsonify({"message": "Please connect to a valid database first!"}))
 
 """
-python -m waitress --host=0.0.0.0 --port=5000 app:app
+gunicorn --bind 0.0.0.0:5000 app:app
 """
 if __name__ == "__main__":
-    from waitress import serve
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
-    serve(app, host="0.0.0.0", port=5000)
