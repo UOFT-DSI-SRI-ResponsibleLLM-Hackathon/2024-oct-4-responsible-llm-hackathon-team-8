@@ -117,6 +117,8 @@ def query_database():
     if conn:
         table_name, colnames = get_table_attributes(conn)
         sql_query = langchain_generate_sql(user_input, colnames, table_name)
+        response = sql_query.content
+        
         sql_query = check_sql_query(sql_query)
 
         cursor = conn.cursor()
@@ -124,7 +126,6 @@ def query_database():
             try:
                 cursor.execute(sql_query)
             except:
-                print("bad query")
                 chat_history.append(
                     {
                         "user_input": user_input,
@@ -135,14 +136,14 @@ def query_database():
                 )
                 return header_processing(jsonify({"user_input": user_input, "sql_query": sql_query, "data": None}))
         else:
-            # HARD CODED HERE ...
-            sql_query = """
-                SELECT team_name, rank, match_numbers
-                FROM teams_data
-                ORDER BY rank ASC
-                LIMIT 3;
-            """
-            cursor.execute(sql_query)
+            chat_history.append(
+                {
+                    "user_input": user_input,
+                    "message": response,
+                    "type": "message", 
+                }
+            )
+            return header_processing(jsonify({"message": response}))
 
         # zip rows and features
         columns = [desc[0] for desc in cursor.description]
