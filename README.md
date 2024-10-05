@@ -11,7 +11,7 @@ This project was developed as part of the **2024 Responsible LLM Hackathon**. Th
 Access the live version of our application here (currently using HTTP deployment):  
 **[Live Demo - Vercel Deployment](http://llm-hack-team8-git-leo-branch-alezhibalis-projects.vercel.app/)**
 
-> **Note:** HTTPS deployment is not yet finalized. If you want to enable HTTP on Vercel, you can follow the [Vercel HTTP discussion](https://github.com/vercel/vercel/discussions/5287#discussioncomment-3596055).
+> **Note:** HTTPS deployment is not yet finalized. Please follow the [Vercel HTTP discussion](https://github.com/vercel/vercel/discussions/5287#discussioncomment-3596055).
 
 ---
 
