@@ -4,4 +4,7 @@ Front-end is located: https://github.com/AlezHibali/2024-oct-4-responsible-llm-h
 We did not finish the HTTPS deployment, but we could use HTTP instead. 
 
 Link: https://llm-hack-team8-git-leo-branch-alezhibalis-projects.vercel.app/
+
 Try this to allow HTTP: https://github.com/vercel/vercel/discussions/5287#discussioncomment-3596055
+
+Here is a example databasse: postgresql://alezhibali:alezhibali@league-teams-stat-2023.chck4ckqwqjq.us-east-1.rds.amazonaws.com:5432/postgres
