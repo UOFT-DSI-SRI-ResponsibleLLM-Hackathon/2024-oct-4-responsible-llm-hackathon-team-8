@@ -13,6 +13,9 @@ This project was developed as part of the **2024 Responsible LLM Hackathon**. Th
 ![Alt text](src/demo2.mp4)
 
 
+## Document and Sources Link
+https://utoronto-my.sharepoint.com/personal/jiessie_tie_mail_utoronto_ca/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjiessie%5Ftie%5Fmail%5Futoronto%5Fca%2FDocuments%2FResponsible%20LLM%2DHackathon%2FTeam8%2FFinal%20Submission&ga=1
+
 ## Live Application
 
 Access the live version of our application here (currently using HTTP deployment):  
