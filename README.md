@@ -7,6 +7,8 @@ This project was developed as part of the **2024 Responsible LLM Hackathon**. Th
 ---
 
 ## Demo
+![Alt text](src/demo1.png)
+
 ![Alt text](src/demo1.mp4)
 ![Alt text](src/demo2.mp4)
 
